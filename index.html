@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Saifee Mobile - Shop Photos</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .gradient-bg { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .card-hover { transition: all 0.3s ease; }
+        .card-hover:hover { transform: translateY(-5px); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); }
+        .fade-in { animation: fadeIn 0.6s ease-in; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .modal-overlay { 
+            opacity: 0; 
+            transition: opacity 0.3s ease-in-out; 
+        }
+        .modal-overlay.show { 
+            opacity: 1; 
+        }
+        .modal-content { 
+            transform: scale(0.7) translateY(-50px); 
+            transition: all 0.3s ease-out; 
+        }
+        .modal-content.show { 
+            transform: scale(1) translateY(0); 
+        }
+        .shop-photo {
+            position: relative;
+            overflow: hidden;
+            border-radius: 12px;
+            cursor: pointer;
+        }
+        .shop-photo img {
+            width: 100%;
+            height: 250px;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+        }
+        .shop-photo:hover img {
+            transform: scale(1.05);
+        }
+        .admin-badge {
+            background: linear-gradient(45deg, #ff6b6b, #feca57);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Navigation -->
+    <nav class="gradient-bg text-white shadow-lg sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center space-x-3">
+                    <h1 class="text-xl font-bold">Saifee Mobile</h1>
+                </div>
+                
+                <div class="flex items-center space-x-4">
+                    <!-- Profile Menu -->
+                    <div class="relative">
+                        <button onclick="toggleProfileMenu()" class="flex items-center space-x-2 bg-white bg-opacity-20 hover:bg-opacity-30 px-4 py-2 rounded-lg transition-colors">
+                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
+                            </svg>
+                            <span class="hidden md:block">Menu</span>
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                            </svg>
+                        </button>
+                        
+                        <!-- Dropdown Menu -->
+                        <div id="profileDropdown" class="hidden absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-lg py-2 z-50">
+                            <button onclick="showAboutModal()" class="w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100 flex items-center space-x-2">
+                                <span>ℹ️</span>
+                                <span>About</span>
+                            </button>
+                            <button onclick="showAddressModal()" class="w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100 flex items-center space-x-2">
+                                <span>📍</span>
+                                <span>Our Address</span>
+                            </button>
+                            <div class="border-t border-gray-200 my-2"></div>
+                            <button id="menuAdminAccess" onclick="requestAdminAccess()" class="w-full text-left px-4 py-2 text-purple-700 hover:bg-purple-50 flex items-center space-x-2 font-medium">
+                                <span>👑</span>
+                                <span>Admin Access</span>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <button id="adminButton" onclick="showAdminPanel()" class="admin-badge text-white px-4 py-2 rounded-lg font-medium hover:opacity-90 transition-opacity hidden">
+                        👑 Admin Panel
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="gradient-bg text-white py-20">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h2 class="text-5xl font-bold mb-6 fade-in">Saifee Mobile Shop</h2>
+            <p class="text-xl mb-8 fade-in">Your trusted destination for premium smartphone accessories</p>
+            
+            <!-- Download Button in Hero -->
+            <div class="flex flex-col sm:flex-row gap-4 justify-center items-center fade-in">
+                <button onclick="scrollToPhotos()" class="bg-white text-purple-600 px-8 py-3 rounded-lg font-semibold hover:bg-purple-50 transition-colors">
+                    View Shop Photos
+                </button>
+                <button onclick="downloadAPK()" class="bg-green-500 hover:bg-green-600 text-white px-8 py-3 rounded-lg font-semibold transition-colors flex items-center space-x-2">
+                    <span>📥</span>
+                    <span>Download App</span>
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Shop Photos Section -->
+    <section id="shop-photos" class="py-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h3 class="text-4xl font-bold text-center mb-12 text-gray-800">Shop Photos</h3>
+            
+            <!-- Photos Grid -->
+            <div id="shopPhotosGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                <!-- Shop photos will be populated by JavaScript -->
+            </div>
+        </div>
+    </section>
+
+    <!-- About Modal -->
+    <div id="aboutModal" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center">
+        <div class="modal-content bg-white rounded-lg p-8 max-w-lg w-full mx-4">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-2xl font-bold text-gray-800">ℹ️ About Saifee Mobile</h3>
+                <button onclick="hideAboutModal()" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
+            </div>
+            <div class="space-y-4">
+                <p class="text-gray-700">Welcome to Saifee Mobile - your trusted destination for premium smartphone accessories and mobile solutions.</p>
+                <p class="text-gray-700">We specialize in high-quality phone cases, chargers, screen protectors, and various mobile accessories to keep your devices protected and functional.</p>
+                <p class="text-gray-700">With years of experience in the mobile accessories industry, we are committed to providing excellent products and outstanding customer service.</p>
+                <div class="bg-purple-50 p-4 rounded-lg">
+                    <h4 class="font-semibold text-purple-800 mb-2">Our Services:</h4>
+                    <ul class="text-purple-700 space-y-1">
+                        <li>• Premium Phone Cases & Covers</li>
+                        <li>• Fast Chargers & Cables</li>
+                        <li>• Screen Protectors & Guards</li>
+                        <li>• Mobile Accessories</li>
+                        <li>• Expert Consultation</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Address Modal -->
+    <div id="addressModal" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center">
+        <div class="modal-content bg-white rounded-lg p-8 max-w-md w-full mx-4">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-2xl font-bold text-gray-800">📍 Our Address</h3>
+                <button onclick="hideAddressModal()" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
+            </div>
+            <div class="space-y-4">
+                <div class="bg-gradient-to-r from-purple-500 to-blue-500 text-white p-6 rounded-lg text-center">
+                    <div class="text-4xl mb-3">🏪</div>
+                    <h4 class="text-xl font-bold mb-2">Saifee Mobile</h4>
+                    <div class="space-y-2 text-purple-100">
+                        <p>Near Bhagu dada mandir</p>
+                        <p>Bus-stop, Jesar</p>
+                        <p>Bhavanagar</p>
+                        <p class="font-semibold">PIN: 364510</p>
+                    </div>
+                </div>
+                <div class="text-center">
+                    <p class="text-gray-600 mb-4">Visit us for the best mobile accessories in town!</p>
+                    <div class="flex justify-center space-x-4">
+                        <span class="text-sm bg-green-100 text-green-600 px-3 py-1 rounded-full">📞 +91 7878780053</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Panel Modal -->
+    <div id="adminModal" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center">
+        <div class="modal-content bg-white rounded-lg p-8 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-2xl font-bold text-gray-800">👑 Administrator Panel</h3>
+                <button onclick="hideAdminPanel()" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
+            </div>
+            
+            <div class="space-y-6">
+                <!-- Upload Logo -->
+                <div class="bg-blue-50 p-6 rounded-lg">
+                    <h4 class="text-lg font-semibold mb-4">📷 Upload Footer Logo</h4>
+                    <form onsubmit="uploadLogo(event)">
+                        <div class="mb-4">
+                            <label class="block text-gray-700 text-sm font-medium mb-2">Company Logo</label>
+                            <div class="border-2 border-dashed border-blue-300 rounded-lg p-6 text-center hover:border-blue-400 transition-colors">
+                                <input type="file" id="logoFileInput" accept="image/*" onchange="handleLogoUpload(event)" class="hidden">
+                                <button type="button" onclick="document.getElementById('logoFileInput').click()" class="bg-blue-100 text-blue-600 px-4 py-2 rounded-lg font-medium hover:bg-blue-200 transition-colors">
+                                    🖼️ Choose Logo
+                                </button>
+                                <p class="text-gray-500 text-sm mt-2">Upload your company logo (JPG, PNG)</p>
+                                <div id="logoPreview" class="mt-4 hidden">
+                                    <img id="logoPreviewImage" src="" alt="Logo Preview" class="max-w-32 max-h-20 mx-auto rounded-lg shadow-md">
+                                    <p id="logoFileName" class="text-sm text-gray-600 mt-2"></p>
+                                </div>
+                            </div>
+                        </div>
+                        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-colors">
+                            Upload Logo
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Add Shop Photo -->
+                <div class="bg-gray-50 p-6 rounded-lg">
+                    <h4 class="text-lg font-semibold mb-4">Add Shop Photo</h4>
+                    <form onsubmit="addShopPhoto(event)">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                            <div>
+                                <label class="block text-gray-700 text-sm font-medium mb-2">Photo Title</label>
+                                <input type="text" id="photoTitle" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500" placeholder="Photo title" required>
+                            </div>
+                            <div>
+                                <label class="block text-gray-700 text-sm font-medium mb-2">Category</label>
+                                <select id="photoCategory" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500" required>
+                                    <option value="interior">Shop Interior</option>
+                                    <option value="exterior">Shop Exterior</option>
+                                    <option value="products">Product Display</option>
+                                    <option value="staff">Staff & Service</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="mb-4">
+                            <label class="block text-gray-700 text-sm font-medium mb-2">Description</label>
+                            <textarea id="photoDescription" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500" rows="3" placeholder="Photo description"></textarea>
+                        </div>
+                        <div class="mb-4">
+                            <label class="block text-gray-700 text-sm font-medium mb-2">Upload Photo</label>
+                            <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-purple-400 transition-colors">
+                                <input type="file" id="photoFileInput" accept="image/*" onchange="handlePhotoUpload(event)" class="hidden" multiple>
+                                <button type="button" onclick="document.getElementById('photoFileInput').click()" class="bg-purple-100 text-purple-600 px-4 py-2 rounded-lg font-medium hover:bg-purple-200 transition-colors">
+                                    📁 Choose Photos
+                                </button>
+                                <p class="text-gray-500 text-sm mt-2">Upload multiple photos (JPG, PNG)</p>
+                                <div id="photoPreview" class="mt-4 hidden">
+                                    <div id="selectedPhotosList" class="space-y-2 max-h-40 overflow-y-auto"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <button type="submit" class="gradient-bg text-white px-6 py-2 rounded-lg font-medium hover:opacity-90 transition-opacity">
+                            Add Shop Photo
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Login Modal -->
+    <div id="adminLoginModal" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center">
+        <div class="modal-content bg-white rounded-lg p-8 max-w-md w-full mx-4">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-2xl font-bold text-gray-800">👑 Admin Login</h3>
+                <button onclick="hideAdminLoginModal()" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
+            </div>
+            <div class="space-y-6">
+                <div class="text-center">
+                    <div class="w-20 h-20 bg-gradient-to-br from-purple-500 to-blue-500 rounded-full flex items-center justify-center text-white text-3xl mx-auto mb-4">
+                        👤
+                    </div>
+                    <h4 class="text-xl font-semibold text-gray-800 mb-2">Shabbir Kapasi</h4>
+                    <p class="text-gray-600">Administrator</p>
+                </div>
+                
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-gray-700 text-sm font-medium mb-2">Admin Password</label>
+                        <input type="password" id="adminPasswordInput" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500" placeholder="Enter admin password">
+                    </div>
+                    <button onclick="verifyAdminLogin()" class="gradient-bg text-white px-6 py-3 rounded-lg font-medium hover:opacity-90 transition-opacity w-full">
+                        Login as Admin
+                    </button>
+                </div>
+                
+                <div class="text-center">
+                    <p class="text-xs text-gray-500">Authorized access only</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white py-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div>
+                    <div class="mb-4">
+                        <h4 class="text-xl font-bold">Saifee Mobile</h4>
+                    </div>
+                    <p class="text-gray-400">Your trusted partner for premium smartphone accessories.</p>
+                </div>
+                <div>
+                    <h5 class="font-semibold mb-4">Services</h5>
+                    <ul class="space-y-2 text-gray-400">
+                        <li>Phone Cases & Covers</li>
+                        <li>Chargers & Cables</li>
+                        <li>Screen Protectors</li>
+                        <li>Mobile Accessories</li>
+                    </ul>
+                </div>
+                <div>
+                    <h5 class="font-semibold mb-4">Contact Info</h5>
+                    <ul class="space-y-2 text-gray-400">
+                        <li>📧 info@saifeemobile.com</li>
+                        <li>📞 +91 7878780053</li>
+                        <li>📍 Jesar, Bhavanagar</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="border-t border-gray-700 mt-8 pt-8 text-center text-gray-400">
+                <div class="space-y-2">
+                    <div class="flex items-center justify-center space-x-4">
+                        <div id="footerCopyrightLogo" class="w-16 h-16 bg-purple-600 rounded-lg flex items-center justify-center text-white text-3xl">
+                            📱
+                        </div>
+                        <p class="text-sm">&copy;️2025 Created by <span class="text-blue-400 font-medium">"Brilliant_Software"</span></p>
+                    </div>
+                    <p class="text-sm">Owner: <span class="text-purple-400 font-medium">Ismail_Kapasi</span></p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Shop photos data
+        let shopPhotos = [];
+        let isAdmin = false;
+        let adminPassword = 'Saifee515253';
+        let adminName = 'Shabbir Kapasi';
+        let selectedFiles = [];
+        let companyLogo = null;
+
+        // Initialize the app
+        function init() {
+            displayShopPhotos(shopPhotos);
+            checkAdminStatus();
+        }
+
+        // Admin access functions
+        function checkAdminStatus() {
+            const adminButton = document.getElementById('adminButton');
+            const menuAdminAccess = document.getElementById('menuAdminAccess');
+            if (isAdmin) {
+                adminButton.classList.remove('hidden');
+                menuAdminAccess.classList.add('hidden');
+            } else {
+                adminButton.classList.add('hidden');
+                menuAdminAccess.classList.remove('hidden');
+            }
+        }
+
+        function showAdminLoginModal() {
+            showModal('adminLoginModal');
+        }
+
+        function hideAdminLoginModal() {
+            hideModal('adminLoginModal');
+            document.getElementById('adminPasswordInput').value = '';
+        }
+
+        function verifyAdminLogin() {
+            const password = document.getElementById('adminPasswordInput').value;
+            if (password === adminPassword) {
+                isAdmin = true;
+                checkAdminStatus();
+                hideAdminLoginModal();
+                showNotification(`Welcome ${adminName}! Admin access granted! 👑`);
+                showAdminPanel();
+            } else if (password.trim() !== '') {
+                showNotification('Incorrect password. Access denied! ❌');
+                document.getElementById('adminPasswordInput').value = '';
+            } else {
+                showNotification('Please enter the admin password!');
+            }
+        }
+
+        function requestAdminAccess() {
+            showAdminLoginModal();
+        }
+
+        // Display shop photos
+        function displayShopPhotos(photos) {
+            const grid = document.getElementById('shopPhotosGrid');
+            grid.innerHTML = '';
+
+            if (photos.length === 0) {
+                grid.innerHTML = `
+                    <div class="col-span-full text-center py-16">
+                        <div class="text-6xl mb-4">🏪</div>
+                        <h3 class="text-2xl font-semibold text-gray-600 mb-2">Shop Photos Coming Soon</h3>
+                        <p class="text-gray-500">We're preparing beautiful photos of our shop for you!</p>
+                        ${isAdmin ? '<p class="text-purple-600 mt-4">👑 Use Admin Panel to add photos</p>' : ''}
+                    </div>
+                `;
+                return;
+            }
+
+            photos.forEach((photo, index) => {
+                const photoCard = document.createElement('div');
+                photoCard.className = 'shop-photo bg-white rounded-lg shadow-md card-hover overflow-hidden';
+                
+                let mediaElement;
+                if (photo.hasFile && photo.fileData) {
+                    mediaElement = `
+                        <img src="${photo.fileData}" 
+                             alt="${photo.title}" 
+                             class="w-full h-64 object-cover"
+                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+                             onload="console.log('Photo loaded successfully: ${photo.title}')">
+                        <div class="w-full h-64 bg-gradient-to-br from-purple-400 to-blue-500 flex items-center justify-center text-white text-6xl" style="display: none;">
+                            🏪
+                        </div>
+                    `;
+                } else {
+                    const categoryEmojis = {
+                        'interior': '🏪',
+                        'exterior': '🏬',
+                        'products': '📱',
+                        'staff': '👥'
+                    };
+                    mediaElement = `<div class="w-full h-64 bg-gradient-to-br from-purple-400 to-blue-500 flex items-center justify-center text-white text-6xl">${categoryEmojis[photo.category] || '🏪'}</div>`;
+                }
+                
+                photoCard.innerHTML = `
+                    <div class="relative">
+                        ${mediaElement}
+                        ${isAdmin ? `
+                            <button onclick="deleteShopPhoto(${photo.id})" class="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white rounded-full w-10 h-10 flex items-center justify-center transition-colors shadow-lg z-10 text-lg" title="Delete this photo">
+                                ❌
+                            </button>
+                        ` : ''}
+                    </div>
+                    <div class="p-4">
+                        <div class="flex justify-between items-start mb-2">
+                            <h4 class="text-lg font-semibold text-gray-800">${photo.title}</h4>
+                            <span class="text-xs bg-purple-100 text-purple-600 px-2 py-1 rounded-full">${photo.category}</span>
+                        </div>
+                        <p class="text-gray-600 text-sm">${photo.description || 'Shop photo'}</p>
+                    </div>
+                `;
+                grid.appendChild(photoCard);
+            });
+        }
+
+        // Logo upload functions
+        function handleLogoUpload(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const preview = document.getElementById('logoPreview');
+                    const previewImage = document.getElementById('logoPreviewImage');
+                    const fileName = document.getElementById('logoFileName');
+                    
+                    previewImage.src = e.target.result;
+                    fileName.textContent = file.name;
+                    preview.classList.remove('hidden');
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function uploadLogo(event) {
+            event.preventDefault();
+            const fileInput = document.getElementById('logoFileInput');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                showNotification('Please select a logo file first!');
+                return;
+            }
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                companyLogo = e.target.result;
+                updateFooterLogo();
+                showNotification('Company logo uploaded successfully! 🖼️');
+                
+                // Reset form
+                event.target.reset();
+                document.getElementById('logoPreview').classList.add('hidden');
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function updateFooterLogo() {
+            const copyrightLogoContainer = document.getElementById('footerCopyrightLogo');
+            
+            if (companyLogo) {
+                copyrightLogoContainer.innerHTML = `<img src="${companyLogo}" alt="Company Logo" class="w-16 h-16 rounded-lg object-cover">`;
+            } else {
+                copyrightLogoContainer.innerHTML = '📱';
+                copyrightLogoContainer.className = 'w-16 h-16 bg-purple-600 rounded-lg flex items-center justify-center text-white text-3xl';
+            }
+        }
+
+        // File upload functions
+        function handlePhotoUpload(event) {
+            const files = Array.from(event.target.files);
+            if (files.length > 0) {
+                selectedFiles = files;
+                const preview = document.getElementById('photoPreview');
+                const filesList = document.getElementById('selectedPhotosList');
+                
+                preview.classList.remove('hidden');
+                filesList.innerHTML = '';
+                
+                files.forEach((file, index) => {
+                    const fileItem = document.createElement('div');
+                    fileItem.className = 'flex items-center justify-between bg-gray-50 p-3 rounded-lg';
+                    
+                    fileItem.innerHTML = `
+                        <div class="flex items-center space-x-3">
+                            <span class="text-2xl">📷</span>
+                            <div>
+                                <p class="text-sm font-medium text-gray-800">${file.name}</p>
+                                <p class="text-xs text-gray-500">Photo • ${(file.size / 1024 / 1024).toFixed(1)} MB</p>
+                            </div>
+                        </div>
+                        <button type="button" onclick="removeSelectedPhoto(${index})" class="text-red-500 hover:text-red-700 text-lg">✕</button>
+                    `;
+                    filesList.appendChild(fileItem);
+                });
+            } else {
+                document.getElementById('photoPreview').classList.add('hidden');
+            }
+        }
+
+        function removeSelectedPhoto(index) {
+            selectedFiles.splice(index, 1);
+            const fileInput = document.getElementById('photoFileInput');
+            
+            const dt = new DataTransfer();
+            selectedFiles.forEach(file => dt.items.add(file));
+            fileInput.files = dt.files;
+            
+            handlePhotoUpload({ target: { files: selectedFiles } });
+        }
+
+        // Add shop photo
+        function addShopPhoto(event) {
+            event.preventDefault();
+            
+            const title = document.getElementById('photoTitle').value;
+            const category = document.getElementById('photoCategory').value;
+            const description = document.getElementById('photoDescription').value;
+            
+            if (!title.trim()) {
+                showNotification('Please enter a photo title!');
+                return;
+            }
+            
+            if (selectedFiles.length > 0) {
+                let processedFiles = 0;
+                
+                selectedFiles.forEach((file, index) => {
+                    const reader = new FileReader();
+                    
+                    reader.onload = function(e) {
+                        const newPhoto = {
+                            id: Date.now() + index,
+                            title: selectedFiles.length > 1 ? `${title} ${index + 1}` : title,
+                            category: category,
+                            description: description,
+                            fileName: file.name,
+                            fileData: e.target.result,
+                            hasFile: true
+                        };
+                        shopPhotos.push(newPhoto);
+                        
+                        processedFiles++;
+                        if (processedFiles === selectedFiles.length) {
+                            setTimeout(() => {
+                                displayShopPhotos(shopPhotos);
+                                showNotification(`${selectedFiles.length} shop photo(s) added successfully! 📷`);
+                            }, 100);
+                        }
+                    };
+                    
+                    reader.onerror = function() {
+                        showNotification('Error reading file: ' + file.name);
+                        processedFiles++;
+                        if (processedFiles === selectedFiles.length) {
+                            displayShopPhotos(shopPhotos);
+                        }
+                    };
+                    
+                    reader.readAsDataURL(file);
+                });
+            } else {
+                const newPhoto = {
+                    id: Date.now(),
+                    title: title,
+                    category: category,
+                    description: description,
+                    hasFile: false
+                };
+                shopPhotos.push(newPhoto);
+                displayShopPhotos(shopPhotos);
+                showNotification('Shop photo added successfully!');
+            }
+            
+            // Reset form and files
+            event.target.reset();
+            selectedFiles = [];
+            document.getElementById('photoPreview').classList.add('hidden');
+        }
+
+        // Delete shop photo
+        function deleteShopPhoto(photoId) {
+            if (!isAdmin) {
+                showNotification('Admin access required! Please login as admin first. ❌');
+                return;
+            }
+            
+            const photoToDelete = shopPhotos.find(photo => photo.id === photoId);
+            if (!photoToDelete) {
+                showNotification('Photo not found! ❌');
+                return;
+            }
+            
+            if (confirm(`Are you sure you want to delete "${photoToDelete.title}"? This action cannot be undone.`)) {
+                const originalLength = shopPhotos.length;
+                shopPhotos = shopPhotos.filter(photo => photo.id !== photoId);
+                
+                if (shopPhotos.length < originalLength) {
+                    displayShopPhotos(shopPhotos);
+                    showNotification('Shop photo deleted successfully! 🗑️');
+                } else {
+                    showNotification('Failed to delete photo! ❌');
+                }
+            }
+        }
+
+        // Admin panel functions
+        function showAdminPanel() {
+            const modal = document.getElementById('adminModal');
+            const content = modal.querySelector('.modal-content');
+            
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.add('show');
+                content.classList.add('show');
+            }, 10);
+        }
+
+        function hideAdminPanel() {
+            const modal = document.getElementById('adminModal');
+            const content = modal.querySelector('.modal-content');
+            
+            modal.classList.remove('show');
+            content.classList.remove('show');
+            
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 300);
+        }
+
+        // APK Download function
+        function downloadAPK() {
+            showNotification('🚧 APK Generation in Progress! This feature will create a real Android app from your website. Coming soon!');
+            
+            const downloadBtn = event.target;
+            const originalText = downloadBtn.innerHTML;
+            
+            downloadBtn.innerHTML = '<span class="text-2xl">⏳</span><span>Preparing Download...</span>';
+            downloadBtn.disabled = true;
+            
+            setTimeout(() => {
+                showAPKDownloadModal();
+                downloadBtn.innerHTML = originalText;
+                downloadBtn.disabled = false;
+            }, 2000);
+        }
+
+        // Show APK Download Modal
+        function showAPKDownloadModal() {
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center';
+            modal.innerHTML = `
+                <div class="bg-white rounded-xl p-8 max-w-md w-full mx-4 text-center">
+                    <div class="text-6xl mb-4">📱</div>
+                    <h3 class="text-2xl font-bold mb-4 text-gray-800">APK Ready for Download!</h3>
+                    <p class="text-gray-600 mb-6">Your Saifee Mobile app has been generated and is ready to install.</p>
+                    
+                    <div class="bg-gray-50 rounded-lg p-4 mb-6">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-sm text-gray-600">File:</span>
+                            <span class="text-sm font-medium">SaifeeMobile.apk</span>
+                        </div>
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-sm text-gray-600">Size:</span>
+                            <span class="text-sm font-medium">15.2 MB</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm text-gray-600">Version:</span>
+                            <span class="text-sm font-medium">1.0.0</span>
+                        </div>
+                    </div>
+                    
+                    <div class="space-y-3">
+                        <button onclick="simulateAPKDownload()" class="w-full bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-lg font-medium transition-colors">
+                            📥 Download APK Now
+                        </button>
+                        <button onclick="this.parentElement.parentElement.parentElement.remove()" class="w-full bg-gray-200 hover:bg-gray-300 text-gray-700 px-6 py-3 rounded-lg font-medium transition-colors">
+                            Cancel
+                        </button>
+                    </div>
+                    
+                    <p class="text-xs text-gray-500 mt-4">
+                        ⚠️ Demo Mode: This simulates APK generation. In production, this would create a real Android app.
+                    </p>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+
+        // Simulate APK Download
+        function simulateAPKDownload() {
+            const htmlContent = document.documentElement.outerHTML;
+            const blob = new Blob([htmlContent], { type: 'text/html' });
+            
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'SaifeeMobile-Demo.html';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+            
+            document.querySelector('.fixed.inset-0').remove();
+            
+            showNotification('📥 Demo file downloaded! In production, this would be a real APK file.');
+        }
+
+        // Utility functions
+        function scrollToPhotos() {
+            document.getElementById('shop-photos').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function showNotification(message) {
+            const notification = document.createElement('div');
+            notification.className = 'fixed top-20 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 fade-in';
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+
+        function toggleProfileMenu() {
+            const dropdown = document.getElementById('profileDropdown');
+            dropdown.classList.toggle('hidden');
+        }
+
+        function showAboutModal() {
+            document.getElementById('profileDropdown').classList.add('hidden');
+            showModal('aboutModal');
+        }
+
+        function hideAboutModal() {
+            hideModal('aboutModal');
+        }
+
+        function showAddressModal() {
+            document.getElementById('profileDropdown').classList.add('hidden');
+            showModal('addressModal');
+        }
+
+        function hideAddressModal() {
+            hideModal('addressModal');
+        }
+
+        function showModal(modalId) {
+            const modal = document.getElementById(modalId);
+            const content = modal.querySelector('.modal-content');
+            
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.add('show');
+                content.classList.add('show');
+            }, 10);
+        }
+
+        function hideModal(modalId) {
+            const modal = document.getElementById(modalId);
+            const content = modal.querySelector('.modal-content');
+            
+            modal.classList.remove('show');
+            content.classList.remove('show');
+            
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 300);
+        }
+
+        // Close modals when clicking outside
+        window.onclick = function(event) {
+            const adminModal = document.getElementById('adminModal');
+            const adminLoginModal = document.getElementById('adminLoginModal');
+            const aboutModal = document.getElementById('aboutModal');
+            const addressModal = document.getElementById('addressModal');
+            const profileDropdown = document.getElementById('profileDropdown');
+            
+            if (event.target === adminModal) {
+                hideAdminPanel();
+            } else if (event.target === adminLoginModal) {
+                hideAdminLoginModal();
+            } else if (event.target === aboutModal) {
+                hideAboutModal();
+            } else if (event.target === addressModal) {
+                hideAddressModal();
+            } else if (!event.target.closest('.relative')) {
+                profileDropdown.classList.add('hidden');
+            }
+        }
+
+        // Allow Enter key to submit admin login
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('adminPasswordInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    verifyAdminLogin();
+                }
+            });
+        });
+
+        // Initialize the app when page loads
+        init();
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'979e2d1a608847e3',t:'MTc1Njk5NjEzNi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
